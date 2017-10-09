@@ -45,7 +45,7 @@ void MainWindow::on_pushButton_clicked()
             }
         }
 
-        if(letterRod==1)
+        if(letterRod==NULL)
         {
             QString rodCisControl = ui->lineRodCis->text();
             int rodCisCheck;
