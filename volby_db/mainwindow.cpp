@@ -45,7 +45,7 @@ void MainWindow::on_pushButton_clicked()
             }
         }
 
-        if(letterRod==NULL)
+        if(letterRod==1)
         {
             QString rodCisControl = ui->lineRodCis->text();
             int rodCisCheck;
@@ -56,8 +56,8 @@ void MainWindow::on_pushButton_clicked()
 
             while(query.next()){
                 rodCisCheck = query.value(0).toInt();
-            }
-            if(rodCisCheck<0)
+             }
+            if(rodCisCheck==NULL)
             {
                 QSqlQuery dotaz;
                 dotaz.prepare("INSERT INTO volic VALUES(:jmeno, :prijmeni, :rodcis)");
@@ -68,6 +68,9 @@ void MainWindow::on_pushButton_clicked()
 
                 Dialog dialog(rodcis,this);
                 dialog.exec();
+            }
+            else{
+               QMessageBox::warning(this,"Pozor!","Vy už jste volil/a.","Ok","Cancel");
             }
         }
         else
