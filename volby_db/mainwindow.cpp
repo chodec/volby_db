@@ -33,19 +33,36 @@ void MainWindow::on_pushButton_clicked()
     QString rodcis = ui->lineRodCis->text();
 
     int letterRod = 0;
+    int numName = 0;
+    int numName2 = 0;
 
     if(!name.isEmpty() && !name2.isEmpty() && !rodcis.isEmpty())
     {
 
-        for(int i=0;i<=rodcis.length();++i)
+         for(int i=0;i<=rodcis.length();++i)
         {
             if (!rodcis[i].isNumber())
             {
                 letterRod++;
             }
         }
+         for(int i=0;i<=name.length();++i)
+        {
+            if (!name[i].isLetter())
+            {
+                numName++;
+            }
+        }
+          for(int i=0;i<=name2.length();++i)
+        {
+            if (!name2[i].isLetter())
+            {
+                numName2++;
+            }
+        }
 
-        if(letterRod==1)
+
+        if(letterRod==1 || numName==1 || numName2 == 0)
         {
             QString rodCisControl = ui->lineRodCis->text();
             int rodCisCheck;
@@ -75,7 +92,7 @@ void MainWindow::on_pushButton_clicked()
         }
         else
         {
-            QMessageBox::warning(this,"Pozor!","Prosím jen čísla.","Ok","Cancel");
+            QMessageBox::warning(this,"Pozor!","Špatný formát údajů.","Ok","Cancel");
 
         }
     }
