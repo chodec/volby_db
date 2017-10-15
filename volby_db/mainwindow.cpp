@@ -74,7 +74,7 @@ void MainWindow::on_pushButton_clicked()
             while(query.next()){
                 rodCisCheck = query.value(0).toInt();
              }
-            if(rodCisCheck==NULL)
+            if(rodCisCheck==0)
             {
                 QSqlQuery dotaz;
                 dotaz.prepare("INSERT INTO volic VALUES(:jmeno, :prijmeni, :rodcis)");
