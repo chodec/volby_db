@@ -62,10 +62,10 @@ void MainWindow::on_pushButton_clicked()
         }
 
 
-        if(letterRod==1 || numName==1 || numName2 == 0)
+        if(letterRod==1 && numName==1 && numName2 == 0)
         {
             QString rodCisControl = ui->lineRodCis->text();
-            int rodCisCheck;
+            int rodCisCheck = 0;
             QSqlQuery query;
             query.prepare("SELECT rodcis FROM volic WHERE rodcis = :rodcis");
             query.bindValue(":rodcis", rodCisControl);
