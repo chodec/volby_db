@@ -4,7 +4,11 @@
 #include <QSqlQuery>
 #include <QDebug>
 #include <QSqlError>
-
+#include <QFile>
+#include <QJsonDocument>
+#include <QJsonArray>
+#include <QJsonObject>
+#include <QFileDialog>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -62,7 +66,7 @@ void MainWindow::on_pushButton_clicked()
         }
 
 
-        if(letterRod==1 && numName==1 && numName2 == 0)
+        if(letterRod==1 && numName==1 && numName2 == 1)
         {
             QString rodCisControl = ui->lineRodCis->text();
             int rodCisCheck = 0;
@@ -74,7 +78,7 @@ void MainWindow::on_pushButton_clicked()
             while(query.next()){
                 rodCisCheck = query.value(0).toInt();
              }
-            if(rodCisCheck==0)
+            if(rodCisCheck==1)
             {
                 QSqlQuery dotaz;
                 dotaz.prepare("INSERT INTO volic VALUES(:jmeno, :prijmeni, :rodcis)");
@@ -102,4 +106,94 @@ void MainWindow::on_pushButton_clicked()
     }
 
 
+}
+void MainWindow::save(const QString &filename)
+{
+    QFile soubor(filename);
+    if(!soubor.open(QIODevice::WriteOnly))
+    {
+        qWarning() << "vypadni! " << filename;
+        return;
+    }
+    QJsonDocument export_doc;
+    QJsonObject export_obj;
+    QJsonArray volic;
+    QSqlQuery dotaz;
+    dotaz.prepare("SELECT * FROM volic");
+    dotaz.exec();
+    while(dotaz.next())
+    {
+        volic["jmeno"] = dotaz.value("jmeno").toString();
+        volic["prijmeni"] = dotaz.value("prijmeni").toString();
+        volic["rodcis"] = dotaz.value("rodcis").toInt();
+        QJsonArray hlasy;
+        QSqlQuery dotaz_hlasy;
+        dotaz_hlasy.prepare("SELECT * FROM hlasy WHERE rodcis = :rodcis");
+        dotaz_hlasy.bindValue(":rodcis", dotaz.value("rodcis").toInt());
+        dotaz_hlasy.exec();
+        while(dotaz_hlasy.next())
+        {
+            hlasy.append(dotaz_hlasy.value("strana").toString());
+        }
+        volic["hlasy"] = hlasy;
+    }
+    export_obj["volic"] = volic;
+    export_doc.setObject(export_obj);
+    soubor.write(export_doc.toJson());
+    soubor.close();
+}
+
+void MainWindow::load(const QString &filename)
+{
+    QFile f(filename);
+    if(!f.open(QIODevice::ReadOnly))
+    {
+        qWarning() << "zase rip " << filename;
+        return;
+    }
+    QJsonDocument doc = QJsonDocument::fromJson(f.readAll());
+    QJsonObject object_doc = doc.object();
+    QJsonArray hlasy = object_doc["hlasy"].toArray();
+    for(int i=0; i<hlasy.count(); ++i)
+    {
+        QSqlQuery dotaz;
+        dotaz.prepare("INSERT INTO hlasy VALUES (:rodcis, :strana)");
+        dotaz.bindValue(":rodcis", hlasy[i].toObject()["rocis"].toInt());
+        dotaz.bindValue(":strana", hlasy[i].toObject()["strana"].toString());
+        dotaz.exec();
+
+    }
+    QJsonArray volic = object_doc["volic"].toArray();
+    for(int i=0; i<volic.count(); ++i)
+    {
+        QSqlQuery dotaz;
+        dotaz.prepare("INSERT INTO volic VALUES (:jmeno, :prijmeni, :vek)");
+        dotaz.bindValue(":jmeno", volic[i].toObject()["jmeno"].toString());
+        dotaz.bindValue(":prijmeni", volic[i].toObject()["prijmeni"].toString());
+        dotaz.bindValue(":rodcis", volic[i].toObject()["rodcis"].toInt());
+        dotaz.exec();
+        int volic_id = dotaz.lastInsertId().toInt();
+       QJsonArray hlasy = volic[i].toObject()["hlasy"].toArray();
+        for(int j=0; j<hlasy.count();++j)
+        {
+            dotaz.prepare("INSERT INTO hlasy VALUES (:rodcis, :strana)");
+            dotaz.bindValue(":rodcis", volic_id);
+            dotaz.bindValue(":strana", hlasy[j].toString());
+            dotaz.exec();
+        }
+
+}
+
+void MainWindow::on_export_2_clicked()
+{
+    QString path =QFileDialog::getSaveFileName(this, "Kam chceš exportovat?");
+    if(path!= "")
+        save(path);
+}
+
+void MainWindow::on_import_2_clicked()
+{
+    QString path =QFileDialog::getOpenFileName(this, "Kam chceš exportovat?");
+    if(path!= "")
+        load(path);
 }
